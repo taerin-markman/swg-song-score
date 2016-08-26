@@ -1,0 +1,31 @@
+27 1b 00 00 00 a4 64 1a 01 38 ab 00 00 53 66 00 00 00 00 05 00 14 bf f3 
+27 31 00 00 00 b0 07 70 01 3c b1 02 00 00 00 00 00 02 00 04 00 4b d0 f3
+27 20 00 00 00 7a 54 5a 01 d2 00 00 00 59 00 00 00 02 00 17 00 47 f0 f3 
+27 30 00 00 00 64 07 92 00 be 07 00 00 0e 03 00 00 00 00 29 00 0c 19 f4 
+                                                                        
+              |           | = address in file
+|    |  = count
+
+
+
+
+ 05 00 14 bf f3 27 31 00 00 00 b0 07 70 01 3c b1 02 00 00 00 00 00 02 00 
+|  | = file number
+                              |           | = address in file
+            |    |  = count
+
+
+
+2e7ee1 = player_music/sound/song01_shorn_flourish01.snd
+
+
+2e7291 = start of inner-file list
+3a1 = start of binary data list
+
+
+ 20 43 4f 54 31 30 30 30 00 00 00 00 4a ef 01 00 f0 6e 2e 00 3d bb 5b 00 3d bb 5b 00 32 00 00 00 7d 03 00 00 
+|    C  O  T  1  0  0  0            | = file ID
+                                    |           | = num entries
+                                                |           | = 2nd chunk size (binary info)
+                                                                        |           | =  third chunk size
+                                                                                                |           | = first chunk size
