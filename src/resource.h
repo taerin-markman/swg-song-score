@@ -26,6 +26,8 @@
 #define IDC_SONG_STARWARS2              1010
 #define IDC_INST_ACTIVE_CHIDINKALU      1010
 #define IDC_SONG_FOLK                   1011
+#define IDC_HARDSTOP2                   1011
+#define IDC_CLEAR_HISTORY               1011
 #define IDC_SONG_STARWARS3              1012
 #define IDC_SONG_CEREMONIAL             1013
 #define IDC_SONG_WESTERN                1014
@@ -91,6 +93,8 @@
 #define IDC_STATUS_X                    1073
 #define IDC_STATUS_X2                   1074
 #define IDC_STATUS_TITLE                1074
+#define IDC_GROUP_HISTORY               1075
+#define IDC_HISTORY                     1076
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -100,7 +104,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32791
-#define _APS_NEXT_CONTROL_VALUE         1069
+#define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

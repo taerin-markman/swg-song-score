@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <stdio.h>
+#include <time.h>
 #include "SWGSongScore.h"
 #define MAX_LOADSTRING 100
 
@@ -384,6 +385,257 @@ void EnumerateSongList(HWND hDlg)
   }
 }
 
+
+std::string SongName(SongSoundType song)
+{
+  std::string name = "";
+  switch (song)
+  {
+  case SONG_SOUND_ROCK:
+    name = "rock";
+    break;
+  case SONG_SOUND_JAZZ:
+    name = "jazz";
+    break;
+  case SONG_SOUND_VIRTUOSO:
+    name = "virtuoso";
+    break;
+  case SONG_SOUND_STARWARS1:
+    name = "starwars1";
+    break;
+  case SONG_SOUND_STARWARS2:
+    name = "starwars2";
+    break;
+  case SONG_SOUND_STARWARS3:
+    name = "starwars3";
+    break;
+  case SONG_SOUND_FOLK:
+    name = "folk";
+    break;
+  case SONG_SOUND_BALLAD:
+    name = "ballad";
+    break;
+  case SONG_SOUND_CEREMONIAL:
+    name = "ceremonial";
+    break;
+  case SONG_SOUND_WALTZ:
+    name = "waltz";
+    break;
+  case SONG_SOUND_SWING:
+    name = "swing";
+    break;
+  case SONG_SOUND_FUNK:
+    name = "funk";
+    break;
+  case SONG_SOUND_CALYPSO:
+    name = "calypso";
+    break;
+  case SONG_SOUND_WESTERN:
+    name = "western";
+    break;
+  case SONG_SOUND_STARWARS4:
+    name = "starwars4";
+    break;
+  case SONG_SOUND_BOOGIE:
+    name = "boogie";
+    break;
+  case SONG_SOUND_CARNIVAL:
+    name = "carnival";
+    break;
+  case SONG_SOUND_ZYDECO:
+    name = "zydeco";
+    break;
+  case SONG_SOUND_POP:
+    name = "pop";
+    break;
+  default:
+    break;
+  }
+  return name;
+}
+
+
+static std::string history = "";
+
+void UpdateHistory(HWND hDlg, std::string newHistory)
+{
+  history = newHistory;
+  HFONT hfnt, hOldFont;
+  HDC hdc;
+  hdc = GetDC(GetDlgItem(hDlg, IDC_HISTORY));
+  hfnt = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+
+  if (hOldFont = (HFONT)SelectObject(hdc, hfnt))
+  {
+    SendMessage(GetDlgItem(hDlg, IDC_HISTORY), WM_SETFONT, (WPARAM)hfnt, (LPARAM)true);
+    SendMessage(GetDlgItem(hDlg, IDC_HISTORY), WM_SETTEXT, (WPARAM)0, (LPARAM)history.c_str());
+    SendMessage(GetDlgItem(hDlg, IDC_HISTORY), WM_VSCROLL, (WPARAM)SB_BOTTOM, (LPARAM)0);
+  }
+  SelectObject(hdc, hOldFont);
+}
+
+std::string FlourishName(FlourishSoundType type)
+{
+  char flourish[20] = { 0 };
+  sprintf_s(flourish, 20, "%d", type + 1);
+  return std::string(flourish);
+}
+
+std::string SingleInstrumentBandFlourish(InstrumentSoundType type, std::string flourish)
+{
+  std::string bandFlourishes = "";
+  switch (type)
+  {
+  case INSTRUMENT_SOUND_BANDFILL:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " ban;\r\n";
+    history += "/bandflourish ";
+    history += flourish;
+    history += " omm;\r\n";
+    break;
+  case INSTRUMENT_SOUND_CHIDINKALU:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " chi;\r\n";
+    history += "/bandflourish ";
+    history += flourish;
+    history += " fiz;\r\n";
+    history += "/bandflourish ";
+    history += flourish;
+    history += " klo;\r\n";
+    break;
+  case INSTRUMENT_SOUND_MANDOVIOL:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " man;\r\n";
+    break;
+  case INSTRUMENT_SOUND_NALARGON:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " nal;\r\n";
+    break;
+  case INSTRUMENT_SOUND_TRAZ:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " tra;\r\n";
+    history += "/bandflourish ";
+    history += flourish;
+    history += " fan;\r\n";
+    history += "/bandflourish ";
+    history += flourish;
+    history += " sli;\r\n";
+    break;
+  case INSTRUMENT_SOUND_XANTHA:
+    history += "/bandflourish ";
+    history += flourish;
+    history += " xan;\r\n";
+    break;
+  }
+  return bandFlourishes;
+}
+
+void AppendToHistoryPause()
+{
+  static ULONGLONG lastTime = 0;
+  ULONGLONG newTime = GetTickCount64();
+
+  if (lastTime == 0)
+  {
+    lastTime = newTime;
+  }
+
+  TRACE("lastTime: %lld, newTime: %lld", lastTime, newTime);
+  if (lastTime < newTime)
+  {
+    char delay[20] = { 0 };
+    sprintf_s(delay, 20, "%0.1f", ((DOUBLE)(newTime - lastTime)) / 1000.0);
+    history += "/pause " + std::string(delay) + ";\r\n";
+    lastTime = newTime;
+  }
+}
+
+void AppendToHistory(HWND hDlg, SoundListType soundList)
+{
+  AppendToHistoryPause();
+
+  bool allAreTheSame = true;
+  FlourishSoundType last = FLOURISH_SOUND_MAX;
+  char flourish[20] = { 0 };
+
+  for (unsigned int i = 0; i < INSTRUMENT_SOUND_MAX; i++)
+  {
+    if (last != soundList.SoundList[i] && i != 0)
+    {
+      allAreTheSame = false;
+      break;
+    }
+    last = soundList.SoundList[i];
+  }
+
+
+  if (allAreTheSame)
+  {
+    switch (last)
+    {
+    case FLOURISH_SOUND_1:
+    case FLOURISH_SOUND_2:
+    case FLOURISH_SOUND_3:
+    case FLOURISH_SOUND_4:
+    case FLOURISH_SOUND_5:
+    case FLOURISH_SOUND_6:
+    case FLOURISH_SOUND_7:
+    case FLOURISH_SOUND_8:
+      history += "/bandflourish ";
+      history += FlourishName(last);
+      history += ";\r\n";
+      break;
+    case FLOURISH_SOUND_IDLE:
+      break;
+    case FLOURISH_SOUND_INTRO:
+      history += "/startband " + SongName(SelectedSong) + ";\r\n";
+      break;
+    case FLOURISH_SOUND_OUTRO:
+      history += "/stopband;\r\n";
+      break;
+    default:
+      break;
+    }
+  }
+  else
+  {
+    for (unsigned int i = 0; i < INSTRUMENT_SOUND_MAX; i++)
+    {
+      switch (soundList.SoundList[i])
+      {
+      case FLOURISH_SOUND_1:
+      case FLOURISH_SOUND_2:
+      case FLOURISH_SOUND_3:
+      case FLOURISH_SOUND_4:
+      case FLOURISH_SOUND_5:
+      case FLOURISH_SOUND_6:
+      case FLOURISH_SOUND_7:
+      case FLOURISH_SOUND_8:
+        history += SingleInstrumentBandFlourish((InstrumentSoundType)i, FlourishName(soundList.SoundList[i]));
+        break;
+      case FLOURISH_SOUND_IDLE:
+        break;
+      default:
+        break;
+      }
+    }
+  }
+
+  UpdateHistory(hDlg, history);
+}
+
+void AppendToHistoryBandChange(HWND hDlg, SongSoundType song)
+{
+  AppendToHistoryPause();
+  history += "/changeband " + SongName(song) + ";\r\n";
+  UpdateHistory(hDlg, history);
+}
+
 LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   bool retval = false;
@@ -392,7 +644,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	switch (message)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemText(hDlg,IDC_VERSION_TEXT,"v0.9.3.3");
+		SetDlgItemText(hDlg,IDC_VERSION_TEXT,"v0.9.4.0");
 
 		hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_SWGSONGSCOREWIN32));
 
@@ -429,6 +681,10 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			EndDialog(hDlg, LOWORD(wParam));
 			DestroyWindow(hWndMain);
 			return TRUE;
+
+    case IDC_CLEAR_HISTORY:
+      UpdateHistory(hDlg, "");
+      break;
 
 		case IDC_FLOURISH1:
       player->Flourish( SelectedInstrument, FLOURISH_SOUND_1 );
@@ -494,6 +750,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 
 		case IDC_CHANGE_MUSIC:
       player->ChangeMusic( SelectedSong );
+      AppendToHistoryBandChange(hDlg, SelectedSong);
 			break;
 
     case IDC_HARDSTOP:
@@ -649,6 +906,8 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
       HDC hdc;
       static char textstat[NUM_INSTRUMENTS][50];
       SoundListType * buff = (SoundListType *)lParam;
+
+      AppendToHistory(hDlg, buff[0]);
 
       for( int y = 0; y < NUM_INSTRUMENTS; y++ )
       {
