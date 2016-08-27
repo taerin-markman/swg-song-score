@@ -1,6 +1,10 @@
-# SWG Song Score v0.9.3.0
+# SWG Song Score v0.9.4.0
 
 SWG Song Score is a small utility that emulates a musician from outside the game. It does not interact with the game in any way, but it does require that you have SWG installed. Just unzip it to your SWG installation folder and run it from there. Suggestions are very welcome! (Just keep in mind I'm a noob Win32 programmer. =) )
+
+## New changes in v0.9.4.0:
+
+- There is now a History box that creates a macro suitable for in-game corresponding to what is being played. Just copy and paste its contents. Note that there are some actions the randomizer can take that you cannot take in a macro, such as telling a band instrument other than yours to play a pause (silent) flourish. But it should get close to what you're hearing.
 
 ## New changes in v0.9.3.3:
 
