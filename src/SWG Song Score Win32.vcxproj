@@ -99,14 +99,15 @@
     <ClCompile Include="mp3dec.cpp" />
     <ClCompile Include="ResourceRegistry.cpp" />
     <ClCompile Include="Song.cpp" />
-    <ClCompile Include="SWG Player.cpp" />
+    <ClCompile Include="SWGPlayer.cpp" />
+    <ClCompile Include="SWGPlayerServer.cpp" />
     <ClCompile Include="TOCFile.cpp" />
     <ClCompile Include="TREFile.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SWG Song Score Win32.cpp">
+    <ClCompile Include="SWGSongScore.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
@@ -121,18 +122,17 @@
     <ClInclude Include="ResourceRegistry.h" />
     <ClInclude Include="Song.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="SWG Player.h" />
-    <ClInclude Include="SWG Song Score Win32.h" />
+    <ClInclude Include="SWGPlayer.h" />
+    <ClInclude Include="SWGPlayerServer.h" />
+    <ClInclude Include="SWGSongScore.h" />
     <ClInclude Include="TOCFile.h" />
     <ClInclude Include="TREFile.h" />
     <ClInclude Include="TREResource.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="bitmap2.bmp" />
     <Image Include="small.ico" />
     <Image Include="SWG Song Score Win32.ico" />
     <Image Include="title.bmp" />
-    <Image Include="title.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SWG Song Score Win32.rc" />

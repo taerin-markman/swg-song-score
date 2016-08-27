@@ -47,9 +47,9 @@ Instrument::~Instrument()
   }
 }
 
-BOOL Instrument::prepare()
+bool Instrument::prepare()
 {
-  BOOL success = false;
+  bool success = false;
 
   for (int i = 0; i < FLOURISH_SOUND_MAX; i++)
   {

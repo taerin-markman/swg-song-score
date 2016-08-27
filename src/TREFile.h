@@ -16,7 +16,7 @@ public:
   unsigned int resourceCount;
 
   TREFile(LPCSTR filePath);
-  std::vector<TREResource *> * load();
+  std::vector<TREResource *> * load(std::string filter);
   static void * TREFile::mallocAndRead(HANDLE handle, SIZE_T bytesToRead, SIZE_T decompressedBytes);
   static void * TREFile::mallocAndRead(HANDLE handle, SIZE_T bytesToRead);
 

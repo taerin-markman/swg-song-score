@@ -11,9 +11,9 @@ ResourceRegistry::ResourceRegistry()
   this->musicResources = new std::vector<TREResource *>;
 }
 
-BOOL ResourceRegistry::findByTRE(std::string directory)
+bool ResourceRegistry::findByTRE(std::string directory)
 {
-  BOOL success = true;
+  bool success = true;
 
   WIN32_FIND_DATA findFileData;
   HANDLE hFind;
@@ -28,12 +28,12 @@ BOOL ResourceRegistry::findByTRE(std::string directory)
   }
   else
   {
-    BOOL continuing = true;
+    BOOL continuing = TRUE;
     do
     {
       TRACE("Reading [%s]", findFileData.cFileName);
       TREFile *treFile = new TREFile(findFileData.cFileName);
-      std::vector<TREResource *> *treResources = treFile->load();
+      std::vector<TREResource *> *treResources = treFile->load("player_music/sample/");
       this->resources->insert(this->resources->end(), treResources->begin(), treResources->end());
       continuing = FindNextFile(hFind, &findFileData);
     } while (continuing);
@@ -41,8 +41,6 @@ BOOL ResourceRegistry::findByTRE(std::string directory)
 
     for (std::vector<TREResource *>::iterator it = this->resources->begin(); it != this->resources->end(); ++it)
     {
-      if (strncmp((*it)->name, "player_music/sample/", 20) == 0)
-      {
         this->musicResources->push_back(*it);
         int songNum = -1;
         if (sscanf_s((*it)->name, "player_music/sample/song%02d", &songNum) == 1)
@@ -50,16 +48,15 @@ BOOL ResourceRegistry::findByTRE(std::string directory)
           TRACE("Inserted song: %02d", songNum);
           this->songs.insert(songNum);
         }
-      }
     }
 
   }
   return success;
 }
 
-BOOL ResourceRegistry::findByTOC(std::string directory)
+bool ResourceRegistry::findByTOC(std::string directory)
 {
-  BOOL success = true;
+  bool success = true;
 
   WIN32_FIND_DATA findFileData;
   HANDLE hFind;
@@ -74,12 +71,12 @@ BOOL ResourceRegistry::findByTOC(std::string directory)
   }
   else
   {
-    BOOL continuing = true;
+    BOOL continuing = TRUE;
     do
     {
       TRACE("Reading [%s]", findFileData.cFileName);
       TOCFile *tocFile = new TOCFile(findFileData.cFileName);
-      std::vector<TREResource *> *treResources = tocFile->load();
+      std::vector<TREResource *> *treResources = tocFile->load("player_music/sample/");
       this->resources->insert(this->resources->end(), treResources->begin(), treResources->end());
       continuing = FindNextFile(hFind, &findFileData);
     } while (continuing);
@@ -87,8 +84,6 @@ BOOL ResourceRegistry::findByTOC(std::string directory)
 
     for (std::vector<TREResource *>::iterator it = this->resources->begin(); it != this->resources->end(); ++it)
     {
-      if (strncmp((*it)->name, "player_music/sample/", 20) == 0)
-      {
         this->musicResources->push_back(*it);
         int songNum = -1;
         if (sscanf_s((*it)->name, "player_music/sample/song%02d", &songNum) == 1)
@@ -96,16 +91,15 @@ BOOL ResourceRegistry::findByTOC(std::string directory)
           TRACE("Inserted song: %02d", songNum);
           this->songs.insert(songNum);
         }
-      }
     }
 
   }
   return success;
 }
 
-BOOL ResourceRegistry::find(std::string directory)
+bool ResourceRegistry::find(std::string directory)
 {
-  BOOL success = true;
+  bool success = true;
 
   success = success && this->findByTRE(directory);
   success = success && this->findByTOC(directory);

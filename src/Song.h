@@ -36,13 +36,13 @@ class Song
 protected:
   SongSoundType type;
   ResourceRegistry *registry;
-  Instrument *instruments[INSTRUMENT_SOUND_MAX];
+  Instrument *instruments[NUM_INSTRUMENTS];
   std::string resourcePrefix;
 
 public:
   Song(SongSoundType type, ResourceRegistry *registry);
   ~Song();
-  BOOL prepare();
+  bool prepare();
   void *data(InstrumentSoundType instrument, FlourishSoundType flourish);
   DSBUFFERDESC *dsBufferDesc(InstrumentSoundType instrument, FlourishSoundType flourish);
 };

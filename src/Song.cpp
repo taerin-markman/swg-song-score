@@ -26,9 +26,9 @@ Song::~Song()
   }
 }
 
-BOOL Song::prepare()
+bool Song::prepare()
 {
-  BOOL success = false;
+  bool success = false;
 
   for (int i = 0; i < INSTRUMENT_SOUND_MAX; i++)
   {

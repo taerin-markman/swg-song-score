@@ -22,7 +22,7 @@ class Instrument
 {
 protected:
   InstrumentSoundType type;
-  Flourish *flourishes[FLOURISH_SOUND_MAX];
+  Flourish *flourishes[NUM_FLOURISHES];
   std::string resourcePrefix;
   ResourceRegistry *registry;
 
@@ -30,7 +30,7 @@ public:
 
   Instrument(InstrumentSoundType type, ResourceRegistry *registry, std::string resourcePrefix);
   ~Instrument();
-  BOOL prepare();
+  bool prepare();
   void *data(FlourishSoundType flourish);
   DSBUFFERDESC *dsBufferDesc(FlourishSoundType flourish);
 };

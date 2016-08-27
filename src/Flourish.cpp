@@ -163,9 +163,9 @@ Flourish::~Flourish()
   }
 }
 
-BOOL Flourish::prepare()
+bool Flourish::prepare()
 {
-  BOOL success = false;
+  bool success = false;
 
   if (!this->resource) { return success; }
 

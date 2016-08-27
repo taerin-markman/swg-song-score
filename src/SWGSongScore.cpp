@@ -1,12 +1,12 @@
-// SWG Song Score Win32.cpp : Defines the entry point for the application.
+// SWGSongScore.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
 #include <stdio.h>
-#include "SWG Song Score Win32.h"
+#include "SWGSongScore.h"
 #define MAX_LOADSTRING 100
 
-#include "SWG Player.h"
+#include "SWGPlayer.h"
 #include "Debug.h"
 #include "Song.h"
 
@@ -17,6 +17,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 
 HWND hWndMain, hWndDialog;
 HANDLE SWGPlayerHandle;
+SWGPlayer *player;
 
 typedef struct {
   HWND hwnd;
@@ -25,7 +26,7 @@ typedef struct {
 } SWGWinSongButtonType;
 
 #define MAX_SONG_BUTTONS 50
-SWGWinSongButtonType SongButtons[MAX_SONG_BUTTONS];
+SWGWinSongButtonType SongButtons[MAX_SONG_BUTTONS] = { 0 };
 unsigned int num_songs = 0;
 
 SongSoundType SelectedSong = SONG_SOUND_STARWARS1;
@@ -54,7 +55,7 @@ const int InstrumentStatusControls[] =
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
+bool				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	MainDialog(HWND, UINT, WPARAM, LPARAM);
 
@@ -138,7 +139,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+bool InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
   hInst = hInstance; // Store instance handle in our global variable
 
@@ -150,7 +151,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return FALSE;
   }
 
-	if (!SWGPlayer(hWndMain, &SWGPlayerHandle))
+  player = new SWGPlayer(hWndMain);
+	if (!player)
 	{
 		MessageBoxEx(hWndMain,"ERROR: Unable to find Star Wars Galaxies files. Make sure this program is run from the Star Wars Galaxies installation directory.","Unable to Start",MB_ICONSTOP | MB_OK,NULL);
 		return FALSE;
@@ -163,12 +165,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-  SWGSetDialog(hWndDialog);
+  player->SetStatusReceiverHandle(hWndDialog);
 
   return TRUE;
 }
 
-void AddSong(unsigned int song_id)
+void AddSong(SongSoundType song_id)
 {
   char * name = "(Unknown)";
   switch( song_id )
@@ -247,7 +249,7 @@ void SortSongs()
   while( !nochange )
   {
     nochange = true;
-    for( x = 0; x < num_songs-1; x++ )
+    for( x = 0; x < num_songs-1 && num_songs > 0; x++ )
     {
       if( SongButtons[x].song_id > SongButtons[x+1].song_id )
       {
@@ -300,15 +302,92 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+void EnumerateSongList(HWND hDlg)
+{
+  bool first_song = true;
+
+  unsigned int xpos;
+  unsigned int ypos;
+  xpos = 372;
+  ypos = 63;
+
+  SortSongs();
+  for (unsigned int x = 0; x < num_songs; x++)
+  {
+    if (SongButtons[x].hwnd)
+    {
+      DestroyWindow(SongButtons[x].hwnd);
+      SongButtons[x].hwnd = NULL;
+    }
+  }
+
+  for (unsigned int x = 0; x < num_songs; x++)
+  {
+    HFONT hfnt, hOldFont;
+    HDC hdc;
+    DWORD winstyle = 0;
+
+    if (first_song)
+    {
+      winstyle = WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP;
+    }
+    else
+    {
+      winstyle = WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON;
+    }
+
+    SongButtons[x].hwnd = CreateWindow(
+      "BUTTON",   // predefined class 
+      SongButtons[x].name,       // button text 
+      winstyle,  // styles 
+      xpos,         // starting x position 
+      ypos,         // starting y position 
+      100,        // button width 
+      15,        // button height 
+      hDlg,       // parent window 
+      NULL,       // No menu 
+      (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE),
+      NULL);      // pointer not needed
+
+    hdc = GetDC(SongButtons[x].hwnd);
+
+    hfnt = (HFONT)GetStockObject(ANSI_VAR_FONT);
+    if (hOldFont = (HFONT)SelectObject(hdc, hfnt))
+    {
+      SendMessage(SongButtons[x].hwnd, WM_SETFONT, (WPARAM)hfnt, (LPARAM)true);
+      SelectObject(hdc, hOldFont);
+    }
+
+    ypos += 15;
+    if (x > 0 && x % 13 == 0)
+    {
+      ypos = 63;
+      xpos += 100;
+    }
+
+    if (first_song)
+    {
+      first_song = false;
+      SelectedSong = SongButtons[x].song_id;
+      SendMessage(SongButtons[x].hwnd, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+    }
+
+    hdc = GetDC(GetDlgItem(hDlg, IDC_STATUS_TITLE));
+    hfnt = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+
+    if (hOldFont = (HFONT)SelectObject(hdc, hfnt))
+    {
+      SendMessage(GetDlgItem(hDlg, IDC_STATUS_TITLE), WM_SETFONT, (WPARAM)hfnt, (LPARAM)true);
+      SendMessage(GetDlgItem(hDlg, IDC_STATUS_TITLE), WM_SETTEXT, (WPARAM)0, (LPARAM) "playing <-- queued");
+    }
+    SelectObject(hdc, hOldFont);
+  }
+}
+
 LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   bool retval = false;
 	HICON hIcon; 
-//  LPARAM result;
-//  HWND hwndButton;
-  unsigned int xpos;
-  unsigned int ypos;
-  static bool first_song = true;
 
 	switch (message)
 	{
@@ -319,7 +398,6 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 
 		SendMessage(hDlg,WM_SETICON,(WPARAM)ICON_BIG,(LPARAM)hIcon);
 		SendMessage(hDlg,WM_SETICON,(WPARAM)ICON_SMALL,(LPARAM)hIcon);
-    //SendMessage(hDlg,SWGC_STATUS,0,0);
 
 		for (int x=0; x<(sizeof(ActiveInstControls)/sizeof(int)); x++)
 		{
@@ -328,71 +406,6 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		EnableWindow(GetDlgItem(hDlg,IDC_INST_OMMNIBOX),false);
 		CheckRadioButton(hDlg,IDC_CURRINST_OMMNIBOX,IDC_CURRINST_XANTHA,IDC_CURRINST_OMMNIBOX);
 
-    xpos = 372;
-    ypos = 63;
-
-    SortSongs();
-    for( unsigned int x = 0; x < num_songs; x++ )
-    {
-      HFONT hfnt, hOldFont; 
-      HDC hdc;
-      DWORD winstyle = 0;
-
-      if( first_song )
-      {
-        winstyle = WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP;
-      }
-      else
-      {
-        winstyle = WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON;
-      }
-
-      SongButtons[x].hwnd = CreateWindow( 
-        "BUTTON",   // predefined class 
-        SongButtons[x].name,       // button text 
-        winstyle,  // styles 
-        xpos,         // starting x position 
-        ypos,         // starting y position 
-        100,        // button width 
-        15,        // button height 
-        hDlg,       // parent window 
-        NULL,       // No menu 
-        (HINSTANCE) GetWindowLong(hDlg, GWL_HINSTANCE), 
-        NULL);      // pointer not needed
-
-      hdc = GetDC( SongButtons[x].hwnd );
-   
-      hfnt = (HFONT)GetStockObject(ANSI_VAR_FONT); 
-      if (hOldFont = (HFONT)SelectObject(hdc, hfnt)) 
-      { 
-        SendMessage( SongButtons[x].hwnd, WM_SETFONT, (WPARAM) hfnt, (LPARAM) true );
-        SelectObject(hdc, hOldFont); 
-      }
-
-      ypos += 15;
-      if( x > 0 && x % 13 == 0 )
-      {
-        ypos = 63;
-        xpos += 100;
-      }
-
-      if( first_song )
-      {
-        first_song = false;
-        SelectedSong = SongButtons[x].song_id;
-        SendMessage( SongButtons[x].hwnd, BM_SETCHECK, (WPARAM) BST_CHECKED, (LPARAM) 0 );
-      }
-
-      hdc = GetDC( GetDlgItem(hDlg,IDC_STATUS_TITLE) );
-      hfnt = (HFONT)GetStockObject(ANSI_FIXED_FONT); 
-
-      if (hOldFont = (HFONT)SelectObject(hdc, hfnt)) 
-      { 
-        SendMessage( GetDlgItem(hDlg,IDC_STATUS_TITLE), WM_SETFONT, (WPARAM) hfnt, (LPARAM) true );
-        SendMessage( GetDlgItem(hDlg,IDC_STATUS_TITLE), WM_SETTEXT, (WPARAM) 0, (LPARAM) "playing <-- queued" );
-      }
-      SelectObject(hdc, hOldFont); 
-    }
     return TRUE;
 
 	case WM_COMMAND:
@@ -410,7 +423,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
       break;
 
 		case IDOK:
-			Stop(SWG_PLAYER_STOP_NOW);
+			player->Stop(SWG_PLAYER_STOP_NOW);
 			WaitForSingleObject(SWGPlayerHandle,100L);
 			CloseHandle(SWGPlayerHandle);
 			EndDialog(hDlg, LOWORD(wParam));
@@ -418,60 +431,60 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			return TRUE;
 
 		case IDC_FLOURISH1:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_1 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_1 );
 			break;
 		case IDC_FLOURISH2:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_2 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_2 );
 			break;
 		case IDC_FLOURISH3:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_3 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_3 );
 			break;
 		case IDC_FLOURISH4:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_4 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_4 );
 			break;
 		case IDC_FLOURISH5:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_5 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_5 );
 			break;
 		case IDC_FLOURISH6:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_6 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_6 );
 			break;
 		case IDC_FLOURISH7:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_7 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_7 );
 			break;
 		case IDC_FLOURISH8:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_8 );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_8 );
 			break;
 		case IDC_FLOURISH_SILENCE:
-			Flourish( SelectedInstrument, FLOURISH_SOUND_SILENCE );
+      player->Flourish( SelectedInstrument, FLOURISH_SOUND_SILENCE );
 			break;
 
 		case IDC_BAND_FLOURISH1:
-			BandFlourish( FLOURISH_SOUND_1 );
+      player->BandFlourish( FLOURISH_SOUND_1 );
 			break;
 		case IDC_BAND_FLOURISH2:
-			BandFlourish( FLOURISH_SOUND_2 );
+      player->BandFlourish( FLOURISH_SOUND_2 );
 			break;
 		case IDC_BAND_FLOURISH3:
-			BandFlourish( FLOURISH_SOUND_3 );
+      player->BandFlourish( FLOURISH_SOUND_3 );
 			break;
 		case IDC_BAND_FLOURISH4:
-			BandFlourish( FLOURISH_SOUND_4 );
+      player->BandFlourish( FLOURISH_SOUND_4 );
 			break;
 		case IDC_BAND_FLOURISH5:
-			BandFlourish( FLOURISH_SOUND_5 );
+      player->BandFlourish( FLOURISH_SOUND_5 );
 			break;
 		case IDC_BAND_FLOURISH6:
-			BandFlourish( FLOURISH_SOUND_6 );
+      player->BandFlourish( FLOURISH_SOUND_6 );
 			break;
 		case IDC_BAND_FLOURISH7:
-			BandFlourish( FLOURISH_SOUND_7 );
+      player->BandFlourish( FLOURISH_SOUND_7 );
 			break;
 		case IDC_BAND_FLOURISH8:
-			BandFlourish( FLOURISH_SOUND_8 );
+      player->BandFlourish( FLOURISH_SOUND_8 );
 			break;
 
 		case IDC_PLAY:
-			Play( SelectedSong, FLOURISH_SOUND_INTRO );
+      player->Play( SelectedSong, FLOURISH_SOUND_INTRO );
 			EnableWindow(GetDlgItem(hDlg,IDC_PLAY), false);
 			EnableWindow(GetDlgItem(hDlg,IDC_HARDSTOP), true);
 			EnableWindow(GetDlgItem(hDlg,IDC_SOFTSTOP), true);
@@ -480,11 +493,11 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		case IDC_CHANGE_MUSIC:
-			ChangeMusic( SelectedSong );
+      player->ChangeMusic( SelectedSong );
 			break;
 
     case IDC_HARDSTOP:
-			Stop( SWG_PLAYER_STOP_NOW );
+      player->Stop( SWG_PLAYER_STOP_NOW );
 			EnableWindow(GetDlgItem(hDlg,IDC_PLAY), true);
 			EnableWindow(GetDlgItem(hDlg,IDC_HARDSTOP), false);
 			EnableWindow(GetDlgItem(hDlg,IDC_SOFTSTOP), false);
@@ -493,7 +506,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		case IDC_SOFTSTOP:
-			Stop( SWG_PLAYER_STOP_END_OF_PHRASE );
+      player->Stop( SWG_PLAYER_STOP_END_OF_PHRASE );
 			EnableWindow(GetDlgItem(hDlg,IDC_PLAY), true);
 			EnableWindow(GetDlgItem(hDlg,IDC_HARDSTOP), false);
 			EnableWindow(GetDlgItem(hDlg,IDC_SOFTSTOP), false);
@@ -502,7 +515,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		case IDC_SOFTERSTOP:
-			Stop( SWG_PLAYER_STOP_GRACEFUL );
+      player->Stop( SWG_PLAYER_STOP_GRACEFUL );
 			EnableWindow(GetDlgItem(hDlg,IDC_PLAY), true);
 			EnableWindow(GetDlgItem(hDlg,IDC_HARDSTOP), false);
 			EnableWindow(GetDlgItem(hDlg,IDC_SOFTSTOP), false);
@@ -511,7 +524,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		case IDC_STOP_SINGLE:
-			EnableInstrument(
+      player->EnableInstrument(
 				SelectedInstrument, 
 				false,
 				SWG_PLAYER_STOP_GRACEFUL
@@ -521,37 +534,37 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 
 
 		case IDC_INST_OMMNIBOX:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_BANDFILL, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_OMMNIBOX) ? true : false) 
 				);
 			break;
 		case IDC_INST_TRAZ:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_TRAZ, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_TRAZ) ? true : false) 
 				);
 			break;
 		case IDC_INST_CHIDINKALU:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_CHIDINKALU, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_CHIDINKALU) ? true : false) 
 				);
 			break;
 		case IDC_INST_NALARGON:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_NALARGON, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_NALARGON) ? true : false) 
 				);
 			break;
 		case IDC_INST_MANDOVIOL:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_MANDOVIOL, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_MANDOVIOL) ? true : false) 
 				);
 			break;
 		case IDC_INST_XANTHA:
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_XANTHA, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_XANTHA) ? true : false) 
 				);
@@ -562,7 +575,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_BANDFILL;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_BANDFILL, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_OMMNIBOX) ? true : false) 
 				);
@@ -572,7 +585,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_TRAZ;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_TRAZ, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_TRAZ) ? true : false) 
 				);
@@ -582,7 +595,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_MANDOVIOL;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_MANDOVIOL, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_MANDOVIOL) ? true : false) 
 				);
@@ -592,7 +605,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_CHIDINKALU;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_CHIDINKALU, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_CHIDINKALU) ? true : false) 
 				);
@@ -602,7 +615,7 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_NALARGON;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_NALARGON, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_NALARGON) ? true : false) 
 				);
@@ -612,20 +625,24 @@ LRESULT CALLBACK MainDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SelectedInstrument = INSTRUMENT_SOUND_XANTHA;
 			EnableWindow(GetDlgItem(hDlg,ActiveInstControls[SelectedInstrument]), false);
 			CheckDlgButton(hDlg,ActiveInstControls[SelectedInstrument],BST_CHECKED);
-			EnableInstrument(
+      player->EnableInstrument(
 				INSTRUMENT_SOUND_XANTHA, 
 				(BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_INST_XANTHA) ? true : false) 
 				);
 			break;
 
     case IDC_RANDOMFLOURISH:
-      EnableRandomFlourish(
+      player->EnableRandomFlourish(
         (BST_CHECKED == IsDlgButtonChecked(hDlg,IDC_RANDOMFLOURISH) ? true : false) 
         );
       break;
 
 		}
 		break;
+  case SWGC_ADD_SONG:
+    AddSong(static_cast<SongSoundType>(lParam));
+    EnumerateSongList(hDlg);
+    break;
   case SWGC_STATUS:
     {
       HFONT hfnt, hOldFont; 

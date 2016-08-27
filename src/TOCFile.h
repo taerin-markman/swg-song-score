@@ -16,6 +16,6 @@ public:
   unsigned int resourceCount;
 
   TOCFile(LPCSTR filePath);
-  std::vector<TREResource *> * load();
+  std::vector<TREResource *> * load(std::string filter);
 
 };

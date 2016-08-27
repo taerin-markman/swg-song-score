@@ -41,7 +41,7 @@ protected:
 public:
   Flourish(FlourishSoundType type, ResourceRegistry *registry, std::string resourcePrefix);
   ~Flourish();
-  BOOL prepare();
+  bool prepare();
   
   DSBUFFERDESC *getDSBufferDesc();
   void *getData();

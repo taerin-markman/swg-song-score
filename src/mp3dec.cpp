@@ -251,8 +251,8 @@ void convertMP3(
     mp3format.wID                 = MPEGLAYER3_ID_MPEG;
 
     mp3format.nBlockSize          = (mp3header->layer == 3 ? 
-      ((12 * GetMP3Bitrate(mp3header->version, mp3header->layer, mp3header->bitrate_idx) / mp3format.wfx.nSamplesPerSec + mp3header->padding_bit) * 4) : 
-      (144 * GetMP3Bitrate(mp3header->version, mp3header->layer, mp3header->bitrate_idx) / mp3format.wfx.nSamplesPerSec + mp3header->padding_bit) );
+      (WORD)((12 * GetMP3Bitrate(mp3header->version, mp3header->layer, mp3header->bitrate_idx) / mp3format.wfx.nSamplesPerSec + mp3header->padding_bit) * 4) : 
+      (WORD)(144 * GetMP3Bitrate(mp3header->version, mp3header->layer, mp3header->bitrate_idx) / mp3format.wfx.nSamplesPerSec + mp3header->padding_bit) );
 
 
       

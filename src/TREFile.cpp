@@ -41,7 +41,7 @@ TREFile::TREFile(LPCSTR filePath)
 
 void * TREFile::mallocAndRead(HANDLE handle, SIZE_T bytesToRead)
 {
-  BOOL readSuccess = false;
+  BOOL readSuccess = FALSE;
   DWORD bytesRead = 0;
   void *data = HeapAlloc(GetProcessHeap(), 0, bytesToRead);
 
@@ -112,9 +112,9 @@ void * TREFile::mallocAndRead(HANDLE handle, SIZE_T bytesToRead, SIZE_T decompre
   return uncompressedData;
 }
 
-std::vector<TREResource *> * TREFile::load()
+std::vector<TREResource *> * TREFile::load(std::string filter)
 {
-  BOOL success = true;
+  bool success = true;
   LPCSTR *resourceNames = NULL;
   TREInfoHeaderType **resources = NULL;
 
@@ -193,7 +193,7 @@ std::vector<TREResource *> * TREFile::load()
     resources = reinterpret_cast<TREInfoHeaderType **>(HeapAlloc(GetProcessHeap(), 0, sizeof(resources) * header->count));
     infoBufferOrig = reinterpret_cast<BYTE *>(TREFile::mallocAndRead(this->fileHandle, bytesToRead, sizeof(TREInfoHeaderType) * header->count));
     infoBuffer = infoBufferOrig;
-    for (int i = 0; i < header->count; i++)
+    for (DWORD32 i = 0; i < header->count; i++)
     {
       resources[i] = reinterpret_cast<TREInfoHeaderType *>(infoBuffer);
       TRACE("dataSize=%d, dataOffset=0x%x, dataCompressed=%d, dataCompressedSize=%d, nameOffset=0x%x", resources[i]->dataSize, resources[i]->dataOffset, resources[i]->dataCompressed, resources[i]->dataCompressedSize, resources[i]->nameOffset);
@@ -212,7 +212,7 @@ std::vector<TREResource *> * TREFile::load()
     names = reinterpret_cast<LPSTR>(TREFile::mallocAndRead(this->fileHandle, bytesToRead, header->namesSize));
     resourceNames = reinterpret_cast<LPCSTR *>(HeapAlloc(GetProcessHeap(), 0, sizeof(resourceNames) * header->count));
 
-    for (int i = 0; i < header->count; i++)
+    for (DWORD32 i = 0; i < header->count; i++)
     {
       DWORD32 offset = resources[i]->nameOffset;
       resourceNames[i] = &(names[offset]);
@@ -223,10 +223,13 @@ std::vector<TREResource *> * TREFile::load()
 
   if (success)
   {
-    for (int i = 0; i < header->count; i++)
+    for (DWORD32 i = 0; i < header->count; i++)
     {
-      TREResource *resource = new TREResource(resources[i]->dataSize, resources[i]->dataOffset, resources[i]->dataCompressed, resources[i]->dataCompressedSize, this->filePath, resourceNames[i]);
-      result->push_back(resource);
+      if (strncmp(resourceNames[i], filter.c_str(), strlen(filter.c_str())) == 0)
+      {
+        TREResource *resource = new TREResource(resources[i]->dataSize, resources[i]->dataOffset, resources[i]->dataCompressed, resources[i]->dataCompressedSize, this->filePath, resourceNames[i]);
+        result->push_back(resource);
+      }
     }
   }
 

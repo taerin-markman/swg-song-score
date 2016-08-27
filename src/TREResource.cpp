@@ -30,7 +30,7 @@ TREResource::TREResource(
 DWORD TREResource::load(void **out)
 {
   *out = NULL;
-  BOOL success = true;
+  bool success = true;
 
   HANDLE fileHandle = CreateFile(
     this->filePath,
